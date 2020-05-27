@@ -16,6 +16,15 @@ function getAddress(lon, lat)
                 console.log('지역 명칭 : ' + result[1].address_name);
                 console.log('행정구역 코드 : ' + result[1].code);
                 addName = result[1].address_name;
+
+                //동 이하 주소들 빼는 작업
+                temp1 = addName.indexOf(' ');
+                addName1 = addName.slice(0,temp1+1);
+                addName2 = addName.slice(temp1+1);
+                temp2 = addName2.indexOf(' ');
+                addName3 = addName2.slice(0,temp2);
+                addName = addName1+addName3;
+                
                 resolve(addName)
             }
             else {
