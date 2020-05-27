@@ -6,8 +6,6 @@ var mapContainer = document.getElementById('map'), // 지도를 표시할 div
 
 var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
 
-
-
 function getAddress(lon, lat)
 {
     return new Promise( function (resolve, reject) {
@@ -24,7 +22,7 @@ function getAddress(lon, lat)
                 temp2 = addName2.indexOf(' ');
                 addName3 = addName2.slice(0,temp2);
                 addName = addName1+addName3;
-                
+
                 resolve(addName)
             }
             else {
@@ -35,6 +33,13 @@ function getAddress(lon, lat)
     })
 }
 
+const stat_string = {
+    "plenty" : "많음",
+    "some" : "적당",
+    "few" : "거의 없음",
+    "empty" : "품절",
+    "break" : "판매 중단"
+}
 
 // HTML5의 geolocation으로 사용할 수 있는지 확인합니다 
 if (navigator.geolocation) {
@@ -54,10 +59,19 @@ if (navigator.geolocation) {
         geocoder = new kakao.maps.services.Geocoder();
         getAddress(lon, lat).then(function(address){
             console.log("address : " + address);
+            const filter = ["plenty", "some", "few", "empty", "break"]
 
             //이후 작업은 여기에
-
-
+            return getDatas(address, filter)
+        }).then(function (seller_list) {
+            // 필터 모두 다 체크된걸로 들어옴.
+            console.log(seller_list);
+            
+            // 그 중에서 필터링하는 부분
+            const filtered = Array.from(seller_list).filter(function (seller) {
+                return seller.remain_stat == "plenty"
+            })
+            console.log("filtered", filtered)
         });
     });
 } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
