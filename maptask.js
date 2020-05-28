@@ -72,6 +72,13 @@ if (navigator.geolocation) {
                 return seller.remain_stat == "plenty"
             })
             console.log("filtered", filtered)
+            return filtered
+        }).then(function(filtered){
+            //이전에 처리된 값을 filtered로 받음.
+            // 지도로 띄울 부분을 받아온 filtered로 구현.
+            Array.from(filtered).forEach(function (seller) {
+                addMarker([seller.lat, seller.lng], stat_string[seller.remain_stat])
+            })
         });
     });
 } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
@@ -107,6 +114,23 @@ function displayMarker(locPosition, message) {
     map.setCenter(locPosition);      
 }
 
+function addMarker(locPosition, message) {
+    console.log("Position", locPosition, "message", message)
+
+    // 마커를 생성합니다
+    const marker = new kakao.maps.Marker({
+        map: map,
+        position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+        title: message
+    });
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content : message,
+        removable : true
+    });
+
+    infowindow.open(map, marker);
+}
 
 function getAdd(callback, addName){
 
