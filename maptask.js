@@ -6,27 +6,40 @@ var mapContainer = document.getElementById('map'), // 지도를 표시할 div
 
 var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
 
-function getAddress(lon, lat)
+var imageSrc1 = 'img/markerGreen.png', // 마커이미지의 주소입니다    
+    imageSize = new kakao.maps.Size(24, 35), // 마커이미지의 크기입니다
+    // imageOption = {offset: new kakao.maps.Point(27, 69)}; // 마커이미지의 옵션입니다. 마커의 좌표와 일치시킬 이미지 안에서의 좌표를 설정합니다.
+    // 마커 이미지를 생성합니다    
+    markerImage1 = new kakao.maps.MarkerImage(imageSrc1, imageSize);
+var imageSrc2 = 'img/markerYellow.png',     
+    markerImage2 = new kakao.maps.MarkerImage(imageSrc2, imageSize);
+var imageSrc3 = 'img/markerRed.png',     
+    markerImage3 = new kakao.maps.MarkerImage(imageSrc3, imageSize);
+var imageSrc4 = 'img/markerGray.png',     
+    markerImage4 = new kakao.maps.MarkerImage(imageSrc4, imageSize);
+
+    function getAddress(lon, lat)
 {
     return new Promise( function (resolve, reject) {
         var callback = function(result, status) {
             if (status === kakao.maps.services.Status.OK) {
-                console.log('지역 명칭 : ' + result[1].address_name);
-                console.log('행정구역 코드 : ' + result[1].code);
-                addName = result[1].address_name;
+                console.log('지역 명칭 : ' + result[0].address_name);
+                console.log('행정구역 코드 : ' + result[0].code);
+                addName = result[0].address_name;
+                console.log('addName : ' + addName);
 
-                //동 이하 주소들 빼는 작업
-                temp1 = addName.indexOf(' ');
-                addName1 = addName.slice(0,temp1+1);
-                addName2 = addName.slice(temp1+1);
-                temp2 = addName2.indexOf(' ');
-                addName3 = addName2.slice(0,temp2);
-                addName = addName1+addName3;
+                // //동 이하 주소들 빼는 작업
+                // temp1 = addName.indexOf(' ');
+                // addName1 = addName.slice(0,temp1+1);
+                // addName2 = addName.slice(temp1+1);
+                // temp2 = addName2.indexOf(' ');
+                // addName3 = addName2.slice(0,temp2);
+                // addName = addName1+addName3;
 
-                resolve(addName)
+                resolve(addName);
             }
             else {
-                reject(result)
+                reject(result);
             }
         };
         geocoder.coord2RegionCode(lon, lat, callback);
@@ -63,21 +76,32 @@ if (navigator.geolocation) {
 
             //이후 작업은 여기에
             return getDatas(address, filter)
+        /* ------ 추가 필터링한것만 내보내는 방법
+        // }).then(function (seller_list) {
+        //     // 필터 모두 다 체크된걸로 들어옴.
+        //     console.log(seller_list);
+            
+        //     // 그 중에서 필터링하는 부분
+        //     const filtered = Array.from(seller_list).filter(function (seller) {
+        //         return seller.remain_stat == "plenty"
+        //     })
+        //     console.log("filtered", filtered)
+        //     return filtered
+        // }).then(function(filtered){
+        //     //이전에 처리된 값을 filtered로 받음.
+        //     // 지도로 띄울 부분을 받아온 filtered로 구현.
+        //     Array.from(filtered).forEach(function (seller) {
+        //         addMarker([seller.lat, seller.lng], stat_string[seller.remain_stat])
+        //     })
+        // ------ */
         }).then(function (seller_list) {
             // 필터 모두 다 체크된걸로 들어옴.
             console.log(seller_list);
-            
-            // 그 중에서 필터링하는 부분
-            const filtered = Array.from(seller_list).filter(function (seller) {
-                return seller.remain_stat == "plenty"
-            })
-            console.log("filtered", filtered)
-            return filtered
-        }).then(function(filtered){
-            //이전에 처리된 값을 filtered로 받음.
-            // 지도로 띄울 부분을 받아온 filtered로 구현.
-            Array.from(filtered).forEach(function (seller) {
-                addMarker([seller.lat, seller.lng], stat_string[seller.remain_stat])
+
+            // 지도로 띄울 부분
+            Array.from(seller_list).forEach(function (seller) {
+                message = seller.name + '<br>' + stat_string[seller.remain_stat]
+                addMarker2([seller.lat, seller.lng], message, seller.remain_stat)
             })
         });
     });
@@ -114,6 +138,7 @@ function displayMarker(locPosition, message) {
     map.setCenter(locPosition);      
 }
 
+
 function addMarker(locPosition, message) {
     console.log("Position", locPosition, "message", message)
 
@@ -121,7 +146,7 @@ function addMarker(locPosition, message) {
     const marker = new kakao.maps.Marker({
         map: map,
         position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
-        title: message
+        title: message,
     });
 
     var infowindow = new kakao.maps.InfoWindow({
@@ -130,6 +155,79 @@ function addMarker(locPosition, message) {
     });
 
     infowindow.open(map, marker);
+}
+
+function addMarker(locPosition, message) {
+    console.log("Position", locPosition, "message", message)
+
+    // 마커를 생성합니다
+    const marker = new kakao.maps.Marker({
+        map: map,
+        position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+        title: message,
+    });
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content : message,
+        removable : true
+    });
+
+    infowindow.open(map, marker);
+}
+
+//인포윈도우 없이 마커 추가하기
+function addMarker2(locPosition, message, remain_stat) {
+    console.log("Position", locPosition, "message", message)
+    console.log("remain", remain_stat)
+    
+    if (remain_stat=="plenty"){
+        // 마커를 생성합니다
+        var marker2 = new kakao.maps.Marker({
+            map: map,
+            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+            title: message,
+            image: markerImage1
+    });
+    } else if (remain_stat=="some"){
+        // 마커를 생성합니다
+        var marker2 = new kakao.maps.Marker({
+            map: map,
+            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+            title: message,
+            image: markerImage2
+    });
+    } else if (remain_stat=="few"){
+        // 마커를 생성합니다
+        var marker2 = new kakao.maps.Marker({
+            map: map,
+            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+            title: message,
+            image: markerImage3
+    });
+    } else if (remain_stat=="empty" || remain_stat=="break"){
+        // 마커를 생성합니다
+        var marker2 = new kakao.maps.Marker({
+            map: map,
+            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+            title: message,
+            image: markerImage4
+    });
+    } else{
+        // 마커를 생성합니다
+        var marker2 = new kakao.maps.Marker({
+            map: map,
+            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+            title: message
+    });
+    }
+
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content : message,
+        removable : true
+    });
+
+    // infowindow.open(map, marker);
 }
 
 function getAdd(callback, addName){
