@@ -1,3 +1,26 @@
+
+// 위도,경도를 이용하여 거리를 구하는 함수
+function getDistanceFromLatLonInKm(lat1,lng1,lat2,lng2) {
+    lat1 = parseFloat(lat1);
+    lng1 = parseFloat(lng1);
+    lat2 = parseFloat(lat2);
+    lng2 = parseFloat(lng2);
+    function deg2rad(deg) {
+        return deg * (Math.PI/180)
+    }
+
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2-lat1);  // deg2rad below
+    var dLon = deg2rad(lng2-lng1);
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var d = R * c; // Distance in km
+
+    return d;
+}
+
+
+
 var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
     mapOption = { 
         center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
@@ -17,9 +40,12 @@ var imageSrc3 = 'img/markerRed.png',
     markerImage3 = new kakao.maps.MarkerImage(imageSrc3, imageSize);
 var imageSrc4 = 'img/markerGray.png',     
     markerImage4 = new kakao.maps.MarkerImage(imageSrc4, imageSize);
+var imageSrc5 = 'img/markerGreenReco.png',     
+    markerImage5 = new kakao.maps.MarkerImage(imageSrc5, imageSize);
+var imageSrc6 = 'img/markerYellowReco.png',     
+    markerImage6 = new kakao.maps.MarkerImage(imageSrc6, imageSize);
 
-    function getAddress(lon, lat)
-{
+function getAddress(lon, lat){
     return new Promise( function (resolve, reject) {
         var callback = function(result, status) {
             if (status === kakao.maps.services.Status.OK) {
@@ -60,7 +86,9 @@ if (navigator.geolocation) {
     // GeoLocation을 이용해서 접속 위치를 얻어옵니다
     navigator.geolocation.getCurrentPosition(function(position) {
         lat = position.coords.latitude, // 위도
-            lon = position.coords.longitude; // 경도
+        lon = position.coords.longitude; // 경도
+
+        var currentPosition = [lat, lon];
 
         var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
             // 인포윈도우에 표시될 내용입니다
@@ -101,8 +129,21 @@ if (navigator.geolocation) {
             // 지도로 띄울 부분
             Array.from(seller_list).forEach(function (seller) {
                 message = seller.name + '<br>' + stat_string[seller.remain_stat]
-                addMarker2([seller.lat, seller.lng], message, seller.remain_stat)
+                addMarker2([seller.lat, seller.lng], message, seller.remain_stat, seller_list)
+                var sellerPosition = [seller.lat, seller.lng]
+                seller.distance = getDistanceFromLatLonInKm(currentPosition[0], currentPosition[1], sellerPosition[0], sellerPosition[1])
             })
+            
+            // 거리순으로 배열
+            seller_list = seller_list.sort(function (a,b) {
+                return a.distance < b.distance ? -1 : a.distance > b.distance ? 1 : 0;
+            })
+
+
+            // Array.from(seller_list).forEach(function (seller) {
+                // console.log(seller_list)
+                // console.log(seller.distance)
+            // });
         });
     }); 
 } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
@@ -157,45 +198,60 @@ function addMarker(locPosition, message) {
     infowindow.open(map, marker);
 }
 
-function addMarker(locPosition, message) {
-    console.log("Position", locPosition, "message", message)
-
-    // 마커를 생성합니다
-    const marker = new kakao.maps.Marker({
-        map: map,
-        position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
-        title: message,
-    });
-
-    var infowindow = new kakao.maps.InfoWindow({
-        content : message,
-        removable : true
-    });
-
-    infowindow.open(map, marker);
+// 가까운 약국 5곳을 찾는 함수
+function nearSeller(locPosition, seller_list) {
+    for (var i=0; i<5; i++){
+        if (locPosition[0] == seller_list[i].lat && locPosition[1] == seller_list[i].lng) {
+            return true
+        }
+        else {
+            continue
+        }
+    }
 }
 
+
 //인포윈도우 없이 마커 추가하기
-function addMarker2(locPosition, message, remain_stat) {
+function addMarker2(locPosition, message, remain_stat, seller_list) {
     console.log("Position", locPosition, "message", message)
     console.log("remain", remain_stat)
     
     if (remain_stat=="plenty"){
+        if (nearSeller(locPosition, seller_list) == true) {
+            // 마커를 생성합니다
+        
+            var marker2 = new kakao.maps.Marker({
+                map: map,
+                position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+                title: message,
+                image: markerImage5
+        });     
+        } else {
+            var marker2 = new kakao.maps.Marker({
+                map: map,
+                position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+                title: message,
+                image: markerImage1
+        });
+        }
+        
+    } else if (remain_stat=='some'){
         // 마커를 생성합니다
-        var marker2 = new kakao.maps.Marker({
-            map: map,
-            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
-            title: message,
-            image: markerImage1
-    });
-    } else if (remain_stat=="some"){
-        // 마커를 생성합니다
-        var marker2 = new kakao.maps.Marker({
-            map: map,
-            position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
-            title: message,
-            image: markerImage2
-    });
+        if (nearSeller(locPosition, seller_list) == true) {
+            var marker2 = new kakao.maps.Marker({
+                map: map,
+                position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+                title: message,
+                image: markerImage6
+        });   
+        } else {
+            var marker2 = new kakao.maps.Marker({
+                map: map,
+                position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
+                title: message,
+                image: markerImage2
+        });    
+        }
     } else if (remain_stat=="few"){
         // 마커를 생성합니다
         var marker2 = new kakao.maps.Marker({
