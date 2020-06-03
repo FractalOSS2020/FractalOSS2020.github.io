@@ -289,3 +289,5 @@ function addMarker2(locPosition, message, remain_stat, seller_list) {
 function getAdd(callback, addName){
 
 }
+
+////////////////////
