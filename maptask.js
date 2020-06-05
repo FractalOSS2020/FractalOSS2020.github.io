@@ -88,11 +88,19 @@ if (navigator.geolocation) {
         lat = position.coords.latitude, // 위도
         lon = position.coords.longitude; // 경도
 
+        // // 임시좌표(제주시청)
+        // lat = 33.499529,
+        // lon = 126.531107;
+        // //임시좌표(한라병원)
+        // lat = 33.489976,
+        // lon = 126.485099;
+
         var currentPosition = [lat, lon];
 
         var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
             // 인포윈도우에 표시될 내용입니다
-            message = String(lat) + '<br>' + String(lon);
+            // message = String(lat) + '<br>' + String(lon);
+            message =  '<div style="padding:5px;">'+ '현위치' +'</div>'
         
         // 마커와 인포윈도우를 표시합니다
         displayMarker(locPosition, message);
@@ -138,6 +146,7 @@ if (navigator.geolocation) {
             seller_list = seller_list.sort(function (a,b) {
                 return a.distance < b.distance ? -1 : a.distance > b.distance ? 1 : 0;
             })
+            console.log(seller_list)
 
 
             // Array.from(seller_list).forEach(function (seller) {
@@ -183,19 +192,29 @@ function displayMarker(locPosition, message) {
 function addMarker(locPosition, message) {
     console.log("Position", locPosition, "message", message)
 
+    // 마커를 클릭했을 때 마커 위에 표시할 인포윈도우를 생성합니다
+    var iwContent = '<div style="padding:5px;">'+ message +'</div>', // 인포윈도우에 표출될 내용으로 HTML 문자열이나 document element가 가능합니다
+        iwRemoveable = true; // removeable 속성을 ture 로 설정하면 인포윈도우를 닫을 수 있는 x버튼이 표시됩니다
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+
     // 마커를 생성합니다
-    const marker = new kakao.maps.Marker({
+    var marker = new kakao.maps.Marker({
         map: map,
         position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
         title: message,
     });
 
-    var infowindow = new kakao.maps.InfoWindow({
-        content : message,
-        removable : true
-    });
-
     infowindow.open(map, marker);
+
+    // 마커에 클릭이벤트를 등록합니다
+    kakao.maps.event.addListener(marker, 'click', function() {
+        // 마커 위에 인포윈도우를 표시합니다
+        infowindow.open(map, marker);  
+    });
 }
 
 // 가까운 약국 5곳을 찾는 함수
@@ -216,6 +235,16 @@ function addMarker2(locPosition, message, remain_stat, seller_list) {
     console.log("Position", locPosition, "message", message)
     console.log("remain", remain_stat)
     
+    // 마커를 클릭했을 때 마커 위에 표시할 인포윈도우를 생성합니다
+    var iwContent = '<div style="padding:5px;">'+ message +'</div>', // 인포윈도우에 표출될 내용으로 HTML 문자열이나 document element가 가능합니다
+        iwRemoveable = true; // removeable 속성을 ture 로 설정하면 인포윈도우를 닫을 수 있는 x버튼이 표시됩니다
+    
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+
     if (remain_stat=="plenty"){
         if (nearSeller(locPosition, seller_list) == true) {
             // 마커를 생성합니다
@@ -277,11 +306,17 @@ function addMarker2(locPosition, message, remain_stat, seller_list) {
     });
     }
 
-
-    var infowindow = new kakao.maps.InfoWindow({
-        content : message,
-        removable : true
+    // 마커에 클릭이벤트를 등록합니다
+    kakao.maps.event.addListener(marker2, 'click', function() {
+        // 마커 위에 인포윈도우를 표시합니다
+        infowindow.open(map, marker2);  
     });
+    
+
+    // var infowindow = new kakao.maps.InfoWindow({
+    //     content : message,
+    //     removable : true
+    // });
 
     // infowindow.open(map, marker);
 }
