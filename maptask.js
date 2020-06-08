@@ -80,6 +80,8 @@ const stat_string = {
     "break" : "판매 중단"
 }
 
+
+
 // HTML5의 geolocation으로 사용할 수 있는지 확인합니다 
 if (navigator.geolocation) {
     
@@ -137,17 +139,17 @@ if (navigator.geolocation) {
             // 지도로 띄울 부분
             Array.from(seller_list).forEach(function (seller) {
                 message = seller.name + '<br>' + stat_string[seller.remain_stat]
-                addMarker2([seller.lat, seller.lng], message, seller.remain_stat, seller_list)
                 var sellerPosition = [seller.lat, seller.lng]
                 seller.distance = getDistanceFromLatLonInKm(currentPosition[0], currentPosition[1], sellerPosition[0], sellerPosition[1])
+                addMarker2([seller.lat, seller.lng], message, seller.remain_stat, seller.distance)
             })
             
-            // 거리순으로 배열
-            seller_list = seller_list.sort(function (a,b) {
-                return a.distance < b.distance ? -1 : a.distance > b.distance ? 1 : 0;
-            })
-            console.log(seller_list)
-
+            // // 거리순으로 배열
+            // seller_list = seller_list.sort(function (a,b) {
+            //     return a.distance < b.distance ? -1 : a.distance > b.distance ? 1 : 0;
+            // })
+            // console.log(seller_list)
+        
 
             // Array.from(seller_list).forEach(function (seller) {
                 // console.log(seller_list)
@@ -190,7 +192,7 @@ function displayMarker(locPosition, message) {
 
 
 function addMarker(locPosition, message) {
-    console.log("Position", locPosition, "message", message)
+    // console.log("Position", locPosition, "message", message)
 
     // 마커를 클릭했을 때 마커 위에 표시할 인포윈도우를 생성합니다
     var iwContent = '<div style="padding:5px;">'+ message +'</div>', // 인포윈도우에 표출될 내용으로 HTML 문자열이나 document element가 가능합니다
@@ -218,22 +220,25 @@ function addMarker(locPosition, message) {
 }
 
 // 가까운 약국 5곳을 찾는 함수
-function nearSeller(locPosition, seller_list) {
-    for (var i=0; i<5; i++){
-        if (locPosition[0] == seller_list[i].lat && locPosition[1] == seller_list[i].lng) {
-            return true
-        }
-        else {
-            continue
-        }
-    }
-}
+// function nearSeller(locPosition, seller_list) {
+//     for (var i=0; i<5; i++){
+//         if (locPosition[0] == seller_list[i].lat && locPosition[1] == seller_list[i].lng) {
+//             console.log('엡 ㅔ베베베베베베베베')
+//             console.log(seller_list, locPosition)
+//             return true
+//         }
+//         else {
+//             continue
+//         }
+//     }
+// }
 
 
 //인포윈도우 없이 마커 추가하기
-function addMarker2(locPosition, message, remain_stat, seller_list) {
-    console.log("Position", locPosition, "message", message)
-    console.log("remain", remain_stat)
+function addMarker2(locPosition, message, remain_stat, distance) {
+    // console.log("Position", locPosition, "message", message)
+    // console.log("remain", remain_stat)
+    // console.log(distance)
     
     // 마커를 클릭했을 때 마커 위에 표시할 인포윈도우를 생성합니다
     var iwContent = '<div style="padding:5px;">'+ message +'</div>', // 인포윈도우에 표출될 내용으로 HTML 문자열이나 document element가 가능합니다
@@ -244,43 +249,41 @@ function addMarker2(locPosition, message, remain_stat, seller_list) {
         content : iwContent,
         removable : iwRemoveable
     });
-
     if (remain_stat=="plenty"){
-        if (nearSeller(locPosition, seller_list) == true) {
-            // 마커를 생성합니다
-        
+        if (distance < 2.5) {
             var marker2 = new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
                 title: message,
                 image: markerImage5
-        });     
-        } else {
+            });
+        }
+        else {
             var marker2 = new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
                 title: message,
                 image: markerImage1
-        });
+            });
         }
-        
     } else if (remain_stat=='some'){
-        // 마커를 생성합니다
-        if (nearSeller(locPosition, seller_list) == true) {
+        // 마커를 생성합니다   
+        if (distance < 2.5) {
             var marker2 = new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
                 title: message,
                 image: markerImage6
-        });   
-        } else {
+            });
+        }
+        else {
             var marker2 = new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(locPosition[0], locPosition[1]),
                 title: message,
                 image: markerImage2
-        });    
-        }
+            });
+        }    
     } else if (remain_stat=="few"){
         // 마커를 생성합니다
         var marker2 = new kakao.maps.Marker({
